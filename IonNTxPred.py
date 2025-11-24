@@ -76,11 +76,11 @@ def main():
             print("Model setup completed successfully.")
 
         except urllib.error.URLError as e:
-            print(f"Network error: {e}. Please check your internet connection.")
+            print(f"Network error: {e}. Please check your internet connection. or Download the model directly from Hugging face (https://huggingface.co/raghavagps-group/IonNTxPred/tree/main) and place the downloaded files inside the 'model' directory.")
         except zipfile.BadZipFile:
-            print("Error: The downloaded file is corrupted. Please try again.")
+            print("Error: The downloaded file is corrupted. Please try again. Or Download the model directly from Hugging face (https://huggingface.co/raghavagps-group/IonNTxPred/tree/main) and place the downloaded files inside the 'model' directory.")
         except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+            print(f"An unexpected error occurred: {e}, Download the model directly from Hugging face (https://huggingface.co/raghavagps-group/IonNTxPred/tree/main) and and place the downloaded files inside the 'model' directory.")
     else:
         print('#################################################################')
         print("Model folder already exists. Skipping download.")
@@ -2353,6 +2353,7 @@ def main():
 
 if __name__ == "__main__":
     main()        
+
 
 
 
