@@ -100,6 +100,8 @@ conda activate IonNTxPred
 - Due to the large size of the model file, the model directory has been compressed and uploaded.
 - Download the **zip file** from [Download Page](https://webs.iiitd.edu.in/raghava/ionntxpred/download.php) or [Hugging Face](https://huggingface.co/raghavagps-group/IonNTxPred/tree/main).
 - **Extract the file** before using the code or model.
+- place the Ectracted files inside the 'model' directory..
+
 
 
 ### 🔹 BLAST+ Dependency
