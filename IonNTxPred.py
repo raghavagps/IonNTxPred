@@ -31,7 +31,7 @@ def main():
     parser.add_argument("-i", "--input", type=str, required=True, help="Input: Peptide sequence in FASTA format or single sequence per line in single letter code")
     parser.add_argument("-o", "--output",type=str, default="output.csv", help="Output: File for saving results by default output.csv")
     parser.add_argument("-t","--threshold", type=float, default=0.5, help="Threshold: Value between 0 to 1 by default 0.5")
-    parser.add_argument("-j", "--job", type=int, choices=[1, 2, 3, 4, 5], default=1, help="Job Type: 1: Prediction, 2: Design, 3: Protein Scanning, 4: Motif Scanning, 5: Blast Search")
+    parser.add_argument("-j", "--job", type=int, choices=[1, 2, 3, 4, 5], default=1, help="Job Type: 1: Rapid Screening, 2: Prediction, 3: Design, 4: Protein Scanning, 5: Motif Scanning")
     parser.add_argument("-c", "--channel", type=int, default=None, choices=[1, 2, 3, 4], help="Ion channel type: 1: Na+, 2: K+, 3: Ca+, 4: Other")
     parser.add_argument("-m", "--model", type=int, default= 1, choices=[1, 2], help="Model: 1: ESM2-t12, 2: Hybrid (ESM2-t12 + MERCI)")
     parser.add_argument("-w","--winleng", type=int, choices =range(8, 21), default=8, help="Window Length: 8 to 20 (scan mode only), by default 8")
@@ -651,9 +651,93 @@ def main():
     # CM.to_csv(f"{wd}/Sequence_1",header=False,index=None,sep="\n")
     f.close()
 
+
+
+
+                #======================= Rapid Screening Module starts from here =====================
+
+    if Job == 1:
+        print(f'\n======= You are using the Rapid Screening Module of IonNTxPred. Your results will be stored in file: {wd}/{result_filename}\n')
+        print("\n==================== Running Rapid Screening Module ====================")
+
+        # Define Table 4 corrected probabilities for modulators/non-modulators
+        # Rows: 1-17, 18+ grouped as 18
+        # Columns: [Na+, K+, Ca2+, Other], each with [Modulator, Non-Modulator]
+        table4 = {
+            'Na': [
+                (0.058, 0.942), (0.022, 0.978), (0.0, 1.0), (0.018, 0.982), (0.111, 0.889),
+                (0.375, 0.625), (0.442, 0.558), (0.703, 0.297), (0.775, 0.225), (0.898, 0.102),
+                (0.881, 0.119), (0.888, 0.112), (0.964, 0.036), (0.858, 0.142), (0.937, 0.063),
+                (0.913, 0.087), (0.951, 0.049), (0.958, 0.042)
+            ],
+            'K': [
+                (0.037, 0.963), (0.0, 1.0), (0.0, 1.0), (0.241, 0.759), (0.128, 0.872),
+                (0.384, 0.616), (0.646, 0.354), (0.745, 0.255), (0.821, 0.179), (0.838, 0.162),
+                (0.822, 0.178), (0.889, 0.111), (0.925, 0.075), (0.903, 0.097), (0.953, 0.047),
+                (0.962, 0.038), (0.979, 0.021), (0.959, 0.040)
+            ],
+            'Ca': [
+                (0.078, 0.922), (0.026, 0.974), (0.036, 0.964), (0.319, 0.681), (0.098, 0.902),
+                (0.403, 0.597), (0.692, 0.308), (0.683, 0.317), (0.846, 0.154), (0.780, 0.220),
+                (0.855, 0.145), (0.848, 0.152), (0.910, 0.090), (0.861, 0.139), (0.918, 0.082),
+                (0.957, 0.043), (0.983, 0.017), (0.960, 0.039)
+            ],
+            'Other': [
+                (0.040, 0.960), (0.019, 0.981), (0.027, 0.973), (0.044, 0.956), (0.192, 0.808),
+                (0.417, 0.583), (0.722, 0.278), (0.709, 0.291), (0.755, 0.245), (0.828, 0.172),
+                (0.889, 0.111), (0.916, 0.084), (0.948, 0.052), (0.941, 0.059), (0.937, 0.063),
+                (0.934, 0.066), (0.859, 0.141), (0.948, 0.051)
+            ]
+        }
+
+        # Function to calculate % Cystine composition
+        def calc_aac_c(sequence):
+            sequence = sequence.upper()
+            c_count = sequence.count('C')
+            return round((c_count / len(sequence)) * 100) if len(sequence) > 0 else 0
+
+        # Function to map AAC_C to closest row in Table 4
+        def get_prob_by_aac_c(aac_c, channel):
+            idx = int(aac_c) if aac_c < 18 else 17  # Use 18th row for 18+
+            mod_prob, non_mod_prob = table4[channel][idx]
+            return mod_prob, non_mod_prob
+
+        # Prepare output DataFrame
+        output_data = []
+        for s_id, s in zip(seqid_1, seq):
+            aac_c = calc_aac_c(s)
+            row = {'SeqID': s_id.replace('>', ''), 'Seq': s, 'AAC_C (%)': aac_c}
+            for ch in ['Na', 'K', 'Ca', 'Other']:
+                mod_prob, non_mod_prob = get_prob_by_aac_c(aac_c, ch)
+                row[f"{ch}_Modulator(%)"] = round(mod_prob * 100, 2)
+                row[f"{ch}_NonModulator(%)"] = round(non_mod_prob * 100, 2)
+            output_data.append(row)
+
+        df_output = pd.DataFrame(output_data)
+        df_output.to_csv(f"{wd}/{result_filename}", index=False)
+
+        # print("\n[DEBUG] Columns in final_df:", final_df.columns.tolist())
+
+        # Optional display
+        if dplay == 1:
+            print(df_output[
+                (df_output.get('Na_hybrid_Prediction') == "Modulator") |
+                (df_output.get('K_hybrid_Prediction') == "Modulator") |
+                (df_output.get('Ca_hybrid_Prediction') == "Modulator") |
+                (df_output.get('Other_hybrid_Prediction') == "Modulator") |
+                (df_output.get('Moonlighting_Activity') == "Yes")
+            ])
+        elif dplay == 2:
+            print(df_output)
+
+        print(f"\nRapid Screening results saved in: {wd}/{result_filename}")
+        # Clean up temporary file
+        os.remove(f"{wd}/Sequence_1")
+
+
                 
                 #======================= Prediction Module starts from here =====================
-    if Job == 1:
+    if Job == 2:
         print(f'\n======= You are using the Prediction Module of IonNTxPred. Your results will be stored in file: {wd}/{result_filename}\n')
         print("\n==================== Running Prediction Module ====================")
 
@@ -795,7 +879,7 @@ def main():
         os.remove(f"{wd}/Sequence_1")
 
             #======================= Design Module starts from here =====================
-    if Job == 2:
+    if Job == 3:
 
         #=================================== Na+ Channel Only ================================== 
         if Channel == 1:
@@ -1302,7 +1386,7 @@ def main():
                     os.remove(f"{wd}/Sequence_1")     
         
     #======================= Protein Scanning Module starts from here =====================      
-    if Job == 3:
+    if Job == 4:
                     #=================================== Na+ ==================================        
         if Channel == 1:
             if Model == 1:
@@ -1836,7 +1920,7 @@ def main():
                         os.remove(path)          
                             
                 #======================= Motif Scanning Module starts from here =====================
-    if Job == 4:
+    if Job == 5:
                 #=================================== Na+ ==================================        
             if Channel == 1:
                 print('\n======= You are using the Motif Scanning module of IonNTxPred. Your results will be stored in file: 'f"{wd}/{result_filename}"' =====\n')
@@ -2099,7 +2183,7 @@ def main():
 
 
     #======================= Blast Search Module starts from here =====================
-    if Job == 5:
+    if Job == 6:
         #=================================== Na+ ==================================        
             if Channel == 1:
                 print('\n======= Thanks for using BLAST scan module for Na Channel prediction. Your results will be stored in file :', result_filename, ' =====\n')
