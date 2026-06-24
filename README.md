@@ -19,7 +19,7 @@ It employs large language model for predicting toxic activity against ion channe
 ## 📚 Reference
 **Rathore AS, Jain S, Mehta NK, Raghava GPS. A PLM-based method for predicting protein ion channel modulators for drug discovery and safety evaluation. Protein Sci. 2026 Jul;35(7):e70689. doi: 10.1002/pro.70689. PMID: 42321971; PMCID: PMC13282186.** https://onlinelibrary.wiley.com/doi/10.1002/pro.70689
 ## Zenodo
-https://doi.org/10.1101/2025.11.13.688159
+https://zenodo.org/records/15710074
 ---
 ### 🖼️ IonNTxPred Workflow Representation
 ![IonNTxPred Workflow](https://raw.githubusercontent.com/saloni21098/IonNTxPred/main/images/IonNTxPred.png)
