@@ -17,7 +17,7 @@ It employs large language model for predicting toxic activity against ion channe
 ---
 
 ## 📚 Reference
-**Rathore et al.** _LLM-based Prediction and Designing of Ion Channel Impairing Proteins._ **#Coming Soon#**
+**Rathore et al.** _LLM-based Prediction and Designing of Ion Channel Impairing Proteins._ **#[Coming Soon](https://onlinelibrary.wiley.com/doi/10.1002/pro.70689)#**
 ## Zenodo
 https://doi.org/10.1101/2025.11.13.688159
 ---
